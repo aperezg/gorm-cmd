@@ -13,16 +13,16 @@ type Version struct {
 
 const migrationFileFormatDate = "20060102150405"
 
-//InitVersion Initialize table version on db
-func InitVersion(db *gorm.DB) error {
+//initVersion Initialize table version on db
+func initVersion(db *gorm.DB) error {
 	if !db.HasTable(&Version{}) {
 		return db.AutoMigrate(&Version{}).Error
 	}
 	return nil
 }
 
-//UpdateVersion Add or remove version by typeMigration
-func UpdateVersion(tx *gorm.DB, version string, typeMigration string) error {
+//updateVersion Add or remove version by typeMigration
+func updateVersion(tx *gorm.DB, version string, typeMigration string) error {
 
 	if typeMigration == upMigrationType {
 		return newVersion(tx, version)
@@ -33,14 +33,15 @@ func UpdateVersion(tx *gorm.DB, version string, typeMigration string) error {
 	return nil
 }
 
-//CurrentVersion get the last version
-func CurrentVersion(db *gorm.DB) (Version, error) {
+//currentVersion get the last version
+func CurrentVersion(db *gorm.DB) Version {
 	var last Version
-	err := db.Last(&last).Error
-	return last, err
+	db.Last(&last)
+	return last
 }
 
-func ExtractVersionOfFile(name string) (string, error) {
+//ExctractVersionOfFile read the filename and extract the version number on format ('20060102150405')
+func extractVersionOfFile(name string) (string, error) {
 	file := filepath.Base(name)
 
 	if chkExt := filepath.Ext(file); chkExt != ".go" {
@@ -57,7 +58,7 @@ func ExtractVersionOfFile(name string) (string, error) {
 }
 
 func newVersion(tx *gorm.DB, version string) error {
-	return tx.Create(version).Error
+	return tx.Create(&Version{version}).Error
 }
 
 func rollbackVersion(tx *gorm.DB) error {

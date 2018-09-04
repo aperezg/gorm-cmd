@@ -1,7 +1,9 @@
 package main
 
 import (
+	"github.com/aperezg/gorm-cmd"
 	"github.com/urfave/cli"
+	"log"
 	"os"
 )
 
@@ -34,35 +36,45 @@ const (
 func create() cli.Command {
 	return cli.Command{
 		Name:    createCommandName,
-		Aliases: []string{"c"},
-	}
 
+
+	}
 }
 
 func migrate() cli.Command {
 	return cli.Command{
 		Name:    migrateCommandName,
-		Aliases: []string{"m"},
+		Action: func (c *cli.Context) error {
+			db := gorm_cmd.OpenDB()
+			defer db.Close()
+
+			currentVersion := gorm_cmd.CurrentVersion(db)
+			if err := gorm_cmd.Up("examples/", currentVersion.Version); err != nil {
+				log.Fatal(err)
+			}
+
+			return nil
+		},
 	}
 }
 
 func rollback() cli.Command {
 	return cli.Command{
 		Name:    rollbackCommandName,
-		Aliases: []string{"b"},
+
 	}
 }
 
 func redo() cli.Command {
 	return cli.Command{
 		Name:    redoCommandName,
-		Aliases: []string{"r"},
+
 	}
 }
 
 func version() cli.Command {
 	return cli.Command{
 		Name:    versionCommandName,
-		Aliases: []string{"v"},
+
 	}
 }

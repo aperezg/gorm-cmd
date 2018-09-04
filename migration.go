@@ -1,9 +1,11 @@
 package gorm_cmd
 
 import (
+	"fmt"
 	"github.com/jinzhu/gorm"
 	"log"
 	"path/filepath"
+	"runtime"
 )
 
 type Migration struct {
@@ -15,20 +17,27 @@ type Migration struct {
 	DownFn   func(db *gorm.DB) error
 }
 
+type Migrations map[string]*Migration
+
+var registeredMigrations Migrations
+var execMigration *Migration
+
 const (
 	upMigrationType   = "Up"
 	downMigrationType = "Down"
 )
 
+//Up execute external code of migration
 func (m *Migration) Up(db *gorm.DB) error {
 	if err := m.exec(db, upMigrationType); err != nil {
 		return err
 	}
 
-	log.Println(upMigrationType, ":", filepath.Base(m.Source))
+	log.Println("OK:", upMigrationType, "-", m.Version)
 	return nil
 }
 
+//Down rollback external code of migration
 func (m *Migration) Down(db *gorm.DB) error {
 	if err := m.exec(db, downMigrationType); err != nil {
 		return err
@@ -38,17 +47,17 @@ func (m *Migration) Down(db *gorm.DB) error {
 	return nil
 }
 
+func AddMigrationToExec(up func(tx *gorm.DB) error, down func(tx *gorm.DB) error) {
+	_, file, _, _ := runtime.Caller(1)
+	version, _ := extractVersionOfFile(file)
+
+	execMigration = &Migration{UpFn: up, DownFn: down, Version: version}
+}
+
 func (m *Migration) exec(db *gorm.DB, typeMigration string) error {
-
-	//Create table version if not exists
-	err := InitVersion(db)
-	if err != nil {
-		log.Fatal("Can't create version table:", err)
-	}
-
 	tx := db.Begin()
 	if tx.Error != nil {
-		log.Fatal("Error starting transaction: ", tx.Error)
+		return fmt.Errorf("error starting transaction: %v", tx.Error)
 	}
 
 	fn := m.UpFn
@@ -57,16 +66,15 @@ func (m *Migration) exec(db *gorm.DB, typeMigration string) error {
 	}
 
 	if fn == nil {
-		log.Fatal("The function type", typeMigration, "is not defined")
+		return fmt.Errorf("the function type %s is not defined", typeMigration)
 	}
 
 	if err := m.UpFn(tx); err != nil {
 		tx.Rollback()
-		log.Fatalf("Error executing migration %s :%v", filepath.Base(m.Source), err)
-		return err
+		return fmt.Errorf("error executing migration %s :%v", filepath.Base(m.Source), err)
 	}
 
-	if err := UpdateVersion(tx, m.Version, typeMigration); err != nil {
+	if err := updateVersion(tx, m.Version, typeMigration); err != nil {
 		tx.Rollback()
 		return err
 	}
