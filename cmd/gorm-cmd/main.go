@@ -35,16 +35,14 @@ const (
 
 func create() cli.Command {
 	return cli.Command{
-		Name:    createCommandName,
-
-
+		Name: createCommandName,
 	}
 }
 
 func migrate() cli.Command {
 	return cli.Command{
-		Name:    migrateCommandName,
-		Action: func (c *cli.Context) error {
+		Name: migrateCommandName,
+		Action: func(c *cli.Context) error {
 			db := gorm_cmd.OpenDB()
 			defer db.Close()
 
@@ -60,21 +58,18 @@ func migrate() cli.Command {
 
 func rollback() cli.Command {
 	return cli.Command{
-		Name:    rollbackCommandName,
-
+		Name: rollbackCommandName,
 	}
 }
 
 func redo() cli.Command {
 	return cli.Command{
-		Name:    redoCommandName,
-
+		Name: redoCommandName,
 	}
 }
 
 func version() cli.Command {
 	return cli.Command{
-		Name:    versionCommandName,
-
+		Name: versionCommandName,
 	}
 }

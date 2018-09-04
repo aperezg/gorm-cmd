@@ -12,8 +12,8 @@ func main() {
 }
 
 func Up_20180830235959(tx *gorm.DB) error {
- fmt.Println("Executing Up_20180830235959")
- return nil
+	fmt.Println("Executing Up_20180830235959")
+	return nil
 }
 
 func Down_2018030235959(tx *gorm.DB) error {
