@@ -7,16 +7,16 @@ import (
 )
 
 func main() {
-	gorm_cmd.AddMigrationToExec(Up_20180830235959, Down_20180830235959)
+	gorm_cmd.AddMigrationToExec(Up_20180924235959, Down_20180924235959)
 	gorm_cmd.Run()
 }
 
-func Up_20180830235959(tx *gorm.DB) error {
+func Up_20180924235959(tx *gorm.DB) error {
 	fmt.Println("Executing Up_20180830235959")
 	return nil
 }
 
-func Down_20180830235959(tx *gorm.DB) error {
+func Down_20180924235959(tx *gorm.DB) error {
 	fmt.Println("Executing Down_2018030235959")
 	return nil
 }

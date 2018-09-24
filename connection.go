@@ -21,9 +21,10 @@ type DBConfig struct {
 
 func OpenDB() *gorm.DB {
 	var err error
+	var db *gorm.DB
 
 	dbConfig := loadDBConfig()
-	db, err := gorm.Open(dbConfig.Driver, dbConfig.Conn)
+	db, err = gorm.Open(dbConfig.Driver, dbConfig.Conn)
 	if err != nil {
 		panic(err)
 	}

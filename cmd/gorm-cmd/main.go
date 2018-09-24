@@ -59,6 +59,17 @@ func migrate() cli.Command {
 func rollback() cli.Command {
 	return cli.Command{
 		Name: rollbackCommandName,
+		Action: func(c *cli.Context) error {
+			db := gorm_cmd.OpenDB()
+			defer db.Close()
+
+			currentVersion := gorm_cmd.CurrentVersion(db)
+			if err := gorm_cmd.Down("examples/", currentVersion.Version); err != nil {
+				log.Fatal(err)
+			}
+
+			return nil
+		},
 	}
 }
 
