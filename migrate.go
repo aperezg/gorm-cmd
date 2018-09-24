@@ -27,7 +27,7 @@ func Up(path, currentVersion string) error {
 	}
 
 	if len(registeredMigrations) <= 0 {
-		log.Println("Nothing to execute")
+		log.Println("nothing to execute")
 	}
 
 	return nil
@@ -45,17 +45,19 @@ func getMigrations(path, currentVersion string) error {
 	}
 
 	migrations := Migrations{}
-	vmigrations, err := getValidMigrations(migrationFiles, currentVersion)
+	timeMigrations, err := getValidMigrations(migrationFiles, currentVersion)
 
 	if err != nil {
 		return err
 	}
 
-	for _, v := range vmigrations {
+	for _, t := range timeMigrations {
 		for _, f := range migrationFiles {
 			version, _ := extractVersionOfFile(f.Name())
+			v := t.Format(migrationFileFormatDate)
+
 			if version == v {
-				migrations[v] = &Migration{Version: v, Source: path + f.Name()}
+				migrations = append(migrations, &Migration{Version: v, Source: path + f.Name()})
 			}
 		}
 	}
@@ -63,28 +65,28 @@ func getMigrations(path, currentVersion string) error {
 	return nil
 }
 
-func getValidMigrations(files []os.FileInfo, currentVersion string) ([]string, error) {
-	var migrations sort.StringSlice
+func getValidMigrations(files []os.FileInfo, currentVersion string) (timeSlice, error) {
+	var migrations timeSlice
 	currentVersionTime, _ := time.Parse(migrationFileFormatDate, currentVersion)
 
 	for _, f := range files {
 		version, err := extractVersionOfFile(f.Name())
 		if err != nil {
-			return []string{}, err
+			return timeSlice{}, err
 		}
 
 		vt, err := time.Parse(migrationFileFormatDate, version)
 		if err != nil {
-			return []string{}, err
+			return timeSlice{}, err
 		}
 
 		if vt.Before(currentVersionTime) || vt.Equal(currentVersionTime) {
 			continue
 		}
 
-		migrations = append(migrations, version)
+		migrations = append(migrations, vt)
 	}
 
-	sort.Sort(sort.Reverse(migrations[:]))
+	sort.Sort(migrations)
 	return migrations, nil
 }

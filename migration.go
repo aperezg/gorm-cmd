@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"log"
-	"path/filepath"
 	"runtime"
 )
 
@@ -17,7 +16,7 @@ type Migration struct {
 	DownFn   func(db *gorm.DB) error
 }
 
-type Migrations map[string]*Migration
+type Migrations []*Migration
 
 var registeredMigrations Migrations
 var execMigration *Migration
@@ -43,7 +42,7 @@ func (m *Migration) Down(db *gorm.DB) error {
 		return err
 	}
 
-	log.Println(downMigrationType, ":", filepath.Base(m.Source))
+	log.Println("OK:", downMigrationType, "-", m.Version)
 	return nil
 }
 
@@ -69,9 +68,9 @@ func (m *Migration) exec(db *gorm.DB, typeMigration string) error {
 		return fmt.Errorf("the function type %s is not defined", typeMigration)
 	}
 
-	if err := m.UpFn(tx); err != nil {
+	if err := fn(tx); err != nil {
 		tx.Rollback()
-		return fmt.Errorf("error executing migration %s :%v", filepath.Base(m.Source), err)
+		return fmt.Errorf("error executing migration %s :%v", m.Version, err)
 	}
 
 	if err := updateVersion(tx, m.Version, typeMigration); err != nil {
